@@ -9,6 +9,7 @@ import org.firstinspires.ftc.vision.apriltag.AprilTagDetection;
 
 import java.util.List;
 
+/** @noinspection ALL*/
 @Autonomous(name = "StudioTestDriveAuto", group = "Studio")
 public class StudioTestDriveAuto extends LinearOpMode {
     // Declare motors

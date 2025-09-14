@@ -13,6 +13,7 @@ import org.firstinspires.ftc.vision.apriltag.AprilTagProcessor;
 
 import java.util.List;
 
+/** @noinspection ALL*/
 @Autonomous(name="StudioAuto", group="Linear Opmode")
 public class StudioAuto extends LinearOpMode {
 
