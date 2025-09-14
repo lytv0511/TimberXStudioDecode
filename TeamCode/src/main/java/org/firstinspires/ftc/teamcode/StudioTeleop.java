@@ -311,7 +311,7 @@ public class StudioTeleop extends LinearOpMode {
             double leftFrontPower = drive + strafe + turn;
             double rightFrontPower = -drive + strafe + turn;
             double leftBackPower = drive - strafe + turn;
-            double rightBackPower = drive + strafe - turn;
+            double rightBackPower = -(drive + strafe - turn);
 
             double max = Math.max(1.0, Math.max(Math.abs(leftFrontPower),
                     Math.max(Math.abs(rightFrontPower),

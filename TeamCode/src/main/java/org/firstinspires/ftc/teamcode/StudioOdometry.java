@@ -14,10 +14,10 @@ public class StudioOdometry {
     private int prevLeft = 0, prevRight = 0, prevStrafe = 0;
 
     // Tuning constants (measure on your robot!)
-    private static final double TICKS_PER_REV = 8192.0;   // REV Through-Bore Encoder (example)
-    private static final double WHEEL_DIAMETER_IN = 1.5;  // Odometry wheel diameter (inches)
+    private static final double TICKS_PER_REV = 2000.0;   // REV Through-Bore Encoder (example)
+    private static final double WHEEL_DIAMETER_IN = 1.26;  // Odometry wheel diameter (inches)
     private static final double TICKS_PER_INCH = TICKS_PER_REV / (Math.PI * WHEEL_DIAMETER_IN);
-    private static final double TRACK_WIDTH = 15.0;       // Distance between left & right odo wheels (inches)
+    private static final double TRACK_WIDTH = 8.5;       // Distance between left & right odo wheels (inches)
 
     public StudioOdometry(HardwareMap hardwareMap) {
         leftOdo = hardwareMap.get(DcMotor.class, "leftOdo");
@@ -69,18 +69,26 @@ public class StudioOdometry {
         double dR = dRight / TICKS_PER_INCH;
         double dS = dStrafe / TICKS_PER_INCH;
 
-        // Update pose in robot-relative coordinates
-        double forward = -(dL + dR) / 2.0 * 3.9717563986 * 1.1303344867; // forward/back average
-        double strafe = -dS * 3.9106145251 * 1.1303344867 * 0.8884940027 * 0.865248227;// left/right
-
-        y += forward;
-        x += strafe;
-
-        // Heading change in degrees
-        double dThetaDeg = Math.toDegrees((dR - dL) / TRACK_WIDTH);
-        heading += dThetaDeg * 3.164;
-
-        // Normalize heading to [0, 360)
+        // Three wheel odometry calculation with rotation correction
+        double dTheta = (dR - dL) / TRACK_WIDTH; // radians
+        double dxRobot, dyRobot;
+        if (Math.abs(dTheta) < 1e-6) {
+            dxRobot = -dS;
+            dyRobot = (dL + dR) / 2.0;
+        } else {
+            double radiusForward = (dL + dR) / (2.0 * dTheta);
+            double radiusStrafe = -dS / dTheta;
+            dxRobot = radiusStrafe * Math.sin(dTheta) + radiusForward * (1 - Math.cos(dTheta));
+            dyRobot = radiusForward * Math.sin(dTheta) - radiusStrafe * (1 - Math.cos(dTheta));
+        }
+        // Rotate robot-relative displacement into global coordinates
+        double avgTheta = Math.toRadians(heading) + dTheta / 2.0;
+        double cosT = Math.cos(avgTheta);
+        double sinT = Math.sin(avgTheta);
+        x += dxRobot * cosT - dyRobot * sinT;
+        y += dxRobot * sinT + dyRobot * cosT;
+        // Update heading in degrees and normalize
+        heading += Math.toDegrees(dTheta);
         heading = (heading % 360 + 360) % 360;
     }
 
