@@ -23,7 +23,7 @@ public class StudioTestDriveAuto extends LinearOpMode {
     private static final double DRIVE_KP = 0.02; // proportional constant for drive (more aggressive)
     private static final double STRAFE_KP = 0.02;
     private static final double TURN_KP = 0.005;
-    private static final double MAX_FORWARD_POWER = 1.0;
+    private static final double MAX_FORWARD_POWER = 0.8;
     private static final double MAX_STRAFE_POWER = 0.8;
     private static final double TURN_MAX_POWER = 0.5;
     private static final double HEADING_TOLERANCE = 2.0; // degrees
@@ -52,8 +52,8 @@ public class StudioTestDriveAuto extends LinearOpMode {
 
         // 1. Move forward 86 inches
 //        moveForwardInches(86.0);
-        strafeRightInches(-86.0);
-        rotateDegrees(270);
+        moveForwardInches(75);
+//        rotateDegrees(90);
         // Do NOT stop all motors here before detection unless reached target
 
         // 2. Detect tag using polling loop for up to 2.5 seconds
@@ -110,6 +110,34 @@ public class StudioTestDriveAuto extends LinearOpMode {
         rightBack.setPower(0);
     }
 
+    // Helper method to compute ramp power for smooth acceleration and deceleration
+    private double computeRampPower(double error, double totalDistance, double minPower, double maxPower, boolean isStrafe) {
+        double distanceRemaining = Math.abs(error);
+        double absCommanded = Math.abs(totalDistance);
+        double rampDownDist;
+
+        // Dynamic ramp distance based on commanded distance
+        if (absCommanded < 12.0) {
+            // Tiny moves: constant slow power
+            return Math.copySign(0.4 * maxPower, error);
+        } else if (absCommanded < 40.0 && isStrafe) {
+            rampDownDist = Math.max(6.0, 0.25 * absCommanded);
+            minPower = 0.25; // allow slightly faster start for short strafes
+        } else {
+            rampDownDist = Math.max(10.0, 0.25 * absCommanded);
+        }
+
+        double rampScale = 1.0;
+        if (distanceRemaining < rampDownDist) {
+            rampScale = Math.max(minPower / maxPower, distanceRemaining / rampDownDist);
+        }
+
+        double power = Math.copySign(rampScale * maxPower, error);
+        // Clamp
+        power = Math.max(-maxPower, Math.min(maxPower, power));
+        return power;
+    }
+
     // Move forward/backward using odometry (positive = forward, negative = backward)
     private void moveForwardInches(double inches) {
         double startY = odometry.getY();
@@ -119,17 +147,7 @@ public class StudioTestDriveAuto extends LinearOpMode {
         while (opModeIsActive() && Math.abs(odometry.getY() - targetY) > POSITION_TOLERANCE && System.currentTimeMillis() - startTime < 3000) {
             odometry.update();
             double error = targetY - odometry.getY();
-            double distanceRemaining = Math.abs(error);
-            // Smooth ramping, start and end slow, max mid-way
-            double rampDownDist = 20.0; // inches to start slowing down
-            double minRampPower = 0.3;
-            double rampScale = 1.0;
-            if (distanceRemaining < rampDownDist) {
-                rampScale = Math.max(minRampPower, distanceRemaining / rampDownDist);
-            }
-            double forward = Math.copySign(rampScale * MAX_FORWARD_POWER, error);
-            // Clamp to max/min
-            forward = Math.max(-MAX_FORWARD_POWER, Math.min(MAX_FORWARD_POWER, forward));
+            double forward = computeRampPower(error, inches, 0.3, MAX_FORWARD_POWER, false);
 
             // Heading correction applied as strafe to reduce drift
             double currentHeading = odometry.getHeadingDegrees();
@@ -162,17 +180,7 @@ public class StudioTestDriveAuto extends LinearOpMode {
         while (opModeIsActive() && Math.abs(odometry.getX() - targetX) > POSITION_TOLERANCE && System.currentTimeMillis() - startTime < 3000) {
             odometry.update();
             double errorX = targetX - odometry.getX();
-            double distanceRemaining = Math.abs(errorX);
-            // Smooth ramping for strafe
-            double rampDownDist = 20.0; // inches to start slowing down
-            double minRampPower = 0.3;
-            double rampScale = 1.0;
-            if (distanceRemaining < rampDownDist) {
-                rampScale = Math.max(minRampPower, distanceRemaining / rampDownDist);
-            }
-            double strafe = Math.copySign(rampScale * MAX_STRAFE_POWER, errorX);
-            // Clamp to max/min
-            strafe = Math.max(-MAX_STRAFE_POWER, Math.min(MAX_STRAFE_POWER, strafe));
+            double strafe = computeRampPower(errorX, inches, 0.3, MAX_STRAFE_POWER, true);
 
             // Forward correction for Y drift
             double forwardCorrection = DRIVE_KP * (startY - odometry.getY());
@@ -328,20 +336,19 @@ public class StudioTestDriveAuto extends LinearOpMode {
     }
 
     private void runGPP() {
-        moveForwardInches(30);
-        rotateDegrees(90);
-        moveForwardInches(86);
-        moveForwardInches(-30);
+        moveForwardInches(-86);
     }
 
     private void runPGP(){
         rotateDegrees(180);
         strafeRightInches(-86);
-        rotateDegrees(360);
     }
 
     private void runPPG() {
-        rotateDegrees(360);
-        strafeRightInches(86);
+        strafeRightInches(30);
+        sleep(1000);
+        moveForwardInches(-75);
+        sleep(1000);
+        strafeRightInches(-30);
     }
 }
