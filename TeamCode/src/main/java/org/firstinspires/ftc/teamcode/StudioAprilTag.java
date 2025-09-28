@@ -12,20 +12,11 @@ import org.firstinspires.ftc.vision.apriltag.AprilTagProcessor;
 
 import java.util.List;
 
-/**
- * Wrapper around the AprilTag processor and VisionPortal.
- * Handles initialization, shutdown, and provides helpers to fetch detections.
- */
 public class StudioAprilTag {
 
     private AprilTagProcessor aprilTag;
     private VisionPortal visionPortal;
 
-    /**
-     * Initialize AprilTag detection.
-     * @param hwMap the hardware map
-     * @param cameraName the name of the camera in the robot configuration (e.g., "Webcam 1")
-     */
     public void init(HardwareMap hwMap, String cameraName) {
         // Camera pose relative to the robot center (tune these values for your bot!)
         Position cameraPosition = new Position(DistanceUnit.INCH, 0, 0, 6, 0);
@@ -33,9 +24,6 @@ public class StudioAprilTag {
 
         aprilTag = new AprilTagProcessor.Builder()
                 .setCameraPose(cameraPosition, cameraOrientation)
-                // .setDrawAxes(true)
-                // .setDrawTagOutline(true)
-                // .setTagFamily("tag36h11") // default family
                 .build();
 
         VisionPortal.Builder builder = new VisionPortal.Builder();
@@ -45,10 +33,6 @@ public class StudioAprilTag {
         visionPortal.resumeStreaming();
     }
 
-    /**
-     * Get the latest AprilTag detections.
-     * @return a list of detections (possibly empty, never null)
-     */
     public List<AprilTagDetection> getDetections() {
         if (aprilTag != null) {
             return aprilTag.getDetections();
@@ -56,10 +40,6 @@ public class StudioAprilTag {
         return java.util.Collections.emptyList();
     }
 
-    /**
-     * Choose a "best" detection from the list (e.g., first with metadata, else first with pose).
-     * @return best detection or null if none available
-     */
     public AprilTagDetection getBestDetection() {
         List<AprilTagDetection> detections = getDetections();
         if (detections == null || detections.isEmpty()) return null;
@@ -78,9 +58,6 @@ public class StudioAprilTag {
         return null;
     }
 
-    /**
-     * Stop streaming and free resources. Call at the end of your opmode.
-     */
     public void shutdown() {
         if (visionPortal != null) {
             visionPortal.close();
