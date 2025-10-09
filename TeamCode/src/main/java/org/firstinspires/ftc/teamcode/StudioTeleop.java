@@ -6,7 +6,6 @@ import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import org.firstinspires.ftc.teamcode.StudioOdometry;
-import org.firstinspires.ftc.teamcode.StudioOdometry;
 
 /** @noinspection ALL */
 @TeleOp(name="StudioTeleop")
