@@ -4,7 +4,7 @@ import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 
 public class StudioOdometry {
-    private DcMotor leftOdo, rightOdo, strafeOdo;
+    private DcMotor leftFront, rightBack, leftBack;
     // Robot pose (relative to start, in inches and degrees)
     private double x = 0.0;       // left/right (inches)
     private double y = 0.0;       // forward/back (inches)
@@ -20,23 +20,23 @@ public class StudioOdometry {
     private static final double TRACK_WIDTH = 8.5;       // Distance between left & right odo wheels (inches)
 
     public StudioOdometry(HardwareMap hardwareMap) {
-        leftOdo = hardwareMap.get(DcMotor.class, "leftOdo");
-        rightOdo = hardwareMap.get(DcMotor.class, "rightOdo");
-        strafeOdo = hardwareMap.get(DcMotor.class, "strafeOdo");
+        leftFront = hardwareMap.get(DcMotor.class, "leftFront");
+        rightBack = hardwareMap.get(DcMotor.class, "rightBack");
+        leftBack = hardwareMap.get(DcMotor.class, "leftBack");
         reset();
     }
 
     /** Reset pose and align encoders */
     public void reset() {
         // Reset encoders to 0
-        leftOdo.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        rightOdo.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        strafeOdo.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        leftFront.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        rightBack.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        leftBack.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
 
         // Put encoders back into run mode so they start counting again
-        leftOdo.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-        rightOdo.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-        strafeOdo.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        leftFront.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        rightBack.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        leftBack.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
 
         // Reset internal pose variables
         prevLeft = 0;
@@ -50,9 +50,9 @@ public class StudioOdometry {
     /** Update robot position and heading using encoder deltas */
     public void update() {
         // Current encoder ticks
-        int leftTicks = leftOdo.getCurrentPosition();
-        int rightTicks = -rightOdo.getCurrentPosition();
-        int strafeTicks = strafeOdo.getCurrentPosition();
+        int leftTicks = leftFront.getCurrentPosition();
+        int rightTicks = -rightBack.getCurrentPosition();
+        int strafeTicks = leftBack.getCurrentPosition();
 
         // Delta ticks since last update
         int dLeft = leftTicks - prevLeft;

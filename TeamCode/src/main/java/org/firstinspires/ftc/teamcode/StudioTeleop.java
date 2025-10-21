@@ -1,6 +1,7 @@
 package org.firstinspires.ftc.teamcode;
 
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
+import com.qualcomm.robotcore.hardware.CRServo;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
@@ -11,7 +12,8 @@ import org.firstinspires.ftc.teamcode.StudioOdometry;
 @TeleOp(name="StudioTeleop")
 public class StudioTeleop extends LinearOpMode {
     private DcMotor leftFront, leftBack, rightBack, rightFront;
-//    private Servo clawServo, clawArmServo;
+    private Servo sortingWheel, rampServo, gateServo;
+    private CRServo intake1, intake2;
 
     private StudioOdometry odometry;
 
@@ -123,8 +125,11 @@ public class StudioTeleop extends LinearOpMode {
         leftBack = hardwareMap.get(DcMotorEx.class, "leftBack");
         rightBack = hardwareMap.get(DcMotorEx.class, "rightBack");
         rightFront = hardwareMap.get(DcMotorEx.class, "rightFront");
-//        clawServo = hardwareMap.get(Servo.class, "clawServo");
-//        clawArmServo = hardwareMap.get(Servo.class, "clawArmServo");
+        intake1 = hardwareMap.get(CRServo.class, "intake1");
+        intake2 = hardwareMap.get(CRServo.class, "intake2");
+        sortingWheel = hardwareMap.get(Servo.class, "sortingWheel");
+        gateServo = hardwareMap.get(Servo.class, "gateServo");
+        rampServo = hardwareMap.get(Servo.class, "rampServo");
 
         // --- Initialize Odometry ---
         odometry = new StudioOdometry(hardwareMap);
@@ -144,6 +149,8 @@ public class StudioTeleop extends LinearOpMode {
         boolean isForceGrabClosed = false;
         boolean yButtonPressed = false;
         boolean xButtonPressed = false;
+        boolean aPressed = false;
+        boolean bPressed = false;
 
         while (opModeIsActive()) {
             odometry.update();
@@ -155,6 +162,39 @@ public class StudioTeleop extends LinearOpMode {
             }
             if (!gamepad1.left_stick_button) {
                 leftStickButtonPressed = false;
+            }
+
+            if (gamepad1.dpad_up) {
+                sortingWheel.setPosition(0.27);
+            } else if (gamepad1.dpad_right) {
+                sortingWheel.setPosition(0.54);
+            } else if (gamepad1.dpad_down) {
+                sortingWheel.setPosition(0.81);
+            }
+
+            if (gamepad1.a && !aPressed) {
+                gateServo.setPosition(0.2);
+                aPressed = true;
+            } else if (gamepad1.a && aPressed) {
+                gateServo.setPosition(0.6);
+                aPressed = false;
+            }
+
+            if (gamepad1.b && !bPressed) {
+                gateServo.setPosition(0.2);
+                bPressed = true;
+            } else if (gamepad1.b && bPressed) {
+                gateServo.setPosition(0.8);
+                bPressed = false;
+            }
+
+            if (gamepad1.x && !xButtonPressed) {
+                intake1.setPower(1.0);
+                intake2.setPower(1.0);
+                xButtonPressed = true;
+            } else if (gamepad1.x && xButtonPressed) {
+                intake1.setPower(0);
+                intake2.setPower(0);
             }
 
 //            // Toggle Normal Grab (Y button)
